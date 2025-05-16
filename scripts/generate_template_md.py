@@ -114,7 +114,10 @@ def parse_args():
 
 def main():
     args = parse_args()
-    env = Environment(loader=FileSystemLoader(str(args.template_dir)))
+    env = Environment(
+        loader=FileSystemLoader(str(args.template_dir)),
+        trim_blocks=True,
+        lstrip_blocks=True)
     template = env.get_template(args.template_name)
 
     package_doc_dir = args.launch_docs_dir / args.package_name

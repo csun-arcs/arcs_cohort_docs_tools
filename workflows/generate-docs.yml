@@ -1,42 +1,9 @@
-# This reusable workflow for the CSUN ARCS CoHORT project generates launch docs, updates the Wiki and README.md, and pushes them to the repo/wiki.
-
-name: CSUN ARCS CoHORT Shared Wiki and README Documentation Generator
+name: Generate and Upload Wiki and README Documentation
 
 on:
-  workflow_call:
-    inputs:
-      ros_distro:
-        required: false
-        type: string
-        default: jazzy
-      arcscfg_build_script:
-        required: false
-        type: string
-        default: no_cuda
-      arcscfg_repo:
-        required: false
-        type: string
-        default: https://github.com/csun-arcs/arcscfg.git
-      arcscfg_setup_file:
-        required: false
-        type: string
-        default: cohort_jazzy.yaml
-      arcscfg_deps_file:
-        required: false
-        type: string
-        default: cohort_ros2_jazzy_ubuntu_noble.yaml
-      github_user:
-        required: false
-        type: string
-        default: csun-arcs
-      docs_workflow_filename:
-        required: false
-        type: string
-        default: generate-docs.yml
-      tests_workflow_filename:
-        required: false
-        type: string
-        default: run-tests.yml
+  push:
+    branches:
+      - main
 
 concurrency:
   group: generate-docs
@@ -58,20 +25,24 @@ jobs:
 
       - uses: ros-tooling/setup-ros@v0.7
         with:
-          required-ros-distributions: ${{ inputs.ros_distro }}
+          required-ros-distributions: jazzy
+
+      - name: Clone arcs_cohort_docs_tools
+        run: |
+          git clone https://github.com/csun-arcs/arcs_cohort_docs_tools.git arcs_cohort_docs_tools
 
       - name: Clone and install arcscfg
         run: |
-          git clone ${{ inputs.arcscfg_repo }} arcscfg
+          git clone https://github.com/csun-arcs/arcscfg.git arcscfg
           pip install -e ./arcscfg
 
       - name: Install dependencies with arcscfg
         run: |
-          arcscfg -d -v debug install -id -rd ${{ inputs.ros_distro }} -df ${{ inputs.arcscfg_deps_file }}
+          arcscfg -d -v debug install -id -rd jazzy -df cohort_ros2_jazzy_ubuntu_noble.yaml
 
       - name: Setup workspace with arcscfg
         run: |
-          arcscfg -d -v debug setup -wc ${{ inputs.arcscfg_setup_file }} -w ros_ws -t https
+          arcscfg -d -v debug setup -wc cohort_jazzy.yaml -w ros_ws -t https
 
       - name: Debug directory tree
         run: |
@@ -79,15 +50,15 @@ jobs:
 
       - name: Build workspace with arcscfg
         run: |
-          source /opt/ros/${{ inputs.ros_distro }}/setup.bash
-          arcscfg -d -v debug build -w ros_ws -u /opt/ros/${{ inputs.ros_distro }} -bs ${{ inputs.arcscfg_build_script }}
+          source /opt/ros/jazzy/setup.bash
+          arcscfg -d -v debug build -w ros_ws -u /opt/ros/jazzy -bs no_cuda
 
       - name: Generate launch docs
         shell: bash
         run: |
           source ros_ws/install/setup.bash
           set -euo pipefail
-          python3 "./ros_ws/src/${{ github.event.repository.name }}/scripts/generate_launch_docs.py" \
+          python3 "./arcs_cohort_docs_tools/scripts/generate_launch_docs.py" \
             --workspace "${GITHUB_WORKSPACE}/ros_ws" \
             --package-name "${{ github.event.repository.name }}"
 
@@ -109,16 +80,15 @@ jobs:
         run: |
           set -euo pipefail
           pip install jinja2
-          python3 "./ros_ws/src/${{ github.event.repository.name }}/scripts/generate_template_md.py" \
+          python3 "./arcs_cohort_docs_tools/scripts/generate_template_md.py" \
             --template-dir "wiki" \
             --template-name "Home.template.md" \
             --output "wiki/Home.md" \
             --launch-docs-dir "ros_ws/launch_docs" \
             --workspace "./ros_ws" \
-            --package-name "${{ github.event.repository.name }}"
-            --github-user "${{ inputs.github_user }}"
-            --docs-workflow-filename "${{ inputs.docs_workflow_filename }}"
-            --tests-workflow-filename "${{ inputs.tests_workflow_filename }}"
+            --package-name "${{ github.event.repository.name }}" \
+            --docs-workflow-filename "generate-docs.yml" \
+            --tests-workflow-filename "run-tests.yml"
 
       - name: Publish to GitHub Wiki
         uses: Andrew-Chen-Wang/github-wiki-action@v4
@@ -129,16 +99,15 @@ jobs:
         run: |
           set -euo pipefail
           pip install jinja2
-          python3 "./ros_ws/src/${{ github.event.repository.name }}/scripts/generate_template_md.py" \
+          python3 "./arcs_cohort_docs_tools/scripts/generate_template_md.py" \
             --template-dir "./ros_ws/src/${{ github.event.repository.name }}/templates/" \
             --template-name "README.template.md" \
             --output "./ros_ws/src/${{ github.event.repository.name }}/README.md" \
             --launch-docs-dir "ros_ws/launch_docs" \
             --workspace "./ros_ws" \
-            --package-name "${{ github.event.repository.name }}"
-            --github-user "${{ inputs.github_user }}"
-            --docs-workflow-filename "${{ inputs.docs_workflow_filename }}"
-            --tests-workflow-filename "${{ inputs.tests_workflow_filename }}"
+            --package-name "${{ github.event.repository.name }}" \
+            --docs-workflow-filename "generate-docs.yml" \
+            --tests-workflow-filename "run-tests.yml"
 
       - name: Clone repo with token and force-push README to autogen branch
         env:
@@ -156,7 +125,7 @@ jobs:
           git diff --cached --quiet && echo "No changes to commit." && exit 0
 
           git commit -m "Update auto-generated README.md"
-          git push -f origin autogen/readme || echo "⚠️ Failed to push autogen/readme"
+          git push -f origin autogen/readme
 
           echo "✅ Auto-generated README pushed to autogen/readme"
           echo "🔁 Compare changes at: https://github.com/${{ github.repository }}/compare/main...autogen/readme"

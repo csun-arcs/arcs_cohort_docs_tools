@@ -116,9 +116,9 @@ jobs:
             --launch-docs-dir "ros_ws/launch_docs" \
             --workspace "./ros_ws" \
             --package-name "${{ github.event.repository.name }}"
-            --github-user "${{ input.github_user }}"
-            --docs-workflow-filename "${{ input.docs_workflow_filename }}"
-            --tests-workflow-filename "${{ input.tests_workflow_filename }}"
+            --github-user "${{ inputs.github_user }}"
+            --docs-workflow-filename "${{ inputs.docs_workflow_filename }}"
+            --tests-workflow-filename "${{ inputs.tests_workflow_filename }}"
 
       - name: Publish to GitHub Wiki
         uses: Andrew-Chen-Wang/github-wiki-action@v4
@@ -136,9 +136,9 @@ jobs:
             --launch-docs-dir "ros_ws/launch_docs" \
             --workspace "./ros_ws" \
             --package-name "${{ github.event.repository.name }}"
-            --github-user "${{ input.github_user }}"
-            --docs-workflow-filename "${{ input.docs_workflow_filename }}"
-            --tests-workflow-filename "${{ input.tests_workflow_filename }}"
+            --github-user "${{ inputs.github_user }}"
+            --docs-workflow-filename "${{ inputs.docs_workflow_filename }}"
+            --tests-workflow-filename "${{ inputs.tests_workflow_filename }}"
 
       - name: Clone repo with token and force-push README to autogen branch
         env:

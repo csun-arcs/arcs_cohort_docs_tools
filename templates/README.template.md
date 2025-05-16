@@ -15,9 +15,9 @@ This is the `{{ repo_name }}` ROS 2 package, part of the [CoHORT](https://github
 
 | Branch | Docs | Tests |
 |--------|------|-------|
-{% if 'main' in branches %}| `main` | ![Docs](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ docs_workflow_filename }}/badge.svg?branch=main) | ![Tests](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ tests_workflow_filename }}/badge.svg?branch=main) |{% endif %}
-{% if 'jazzy' in branches %}| `jazzy` | ![Docs](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ docs_workflow_filename }}/badge.svg?branch=jazzy) | ![Tests](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ tests_workflow_filename }}/badge.svg?branch=jazzy) |{% endif %}
-{% if 'humble' in branches %}| `humble` | ![Docs](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ docs_workflow_filename }}/badge.svg?branch=humble) | ![Tests](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ tests_workflow_filename }}/badge.svg?branch=humble) |{% endif %}
+{%- if 'main' in branches %}| `main` | ![Docs](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ docs_workflow_filename }}/badge.svg?branch=main) | ![Tests](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ tests_workflow_filename }}/badge.svg?branch=main) |{%- endif %}
+{%- if 'jazzy' in branches %}| `jazzy` | ![Docs](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ docs_workflow_filename }}/badge.svg?branch=jazzy) | ![Tests](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ tests_workflow_filename }}/badge.svg?branch=jazzy) |{%- endif %}
+{%- if 'humble' in branches %}| `humble` | ![Docs](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ docs_workflow_filename }}/badge.svg?branch=humble) | ![Tests](https://github.com/{{ github_user }}/{{ repo_name }}/actions/workflows/{{ tests_workflow_filename }}/badge.svg?branch=humble) |{%- endif %}
 
 ## 📚 Documentation
 

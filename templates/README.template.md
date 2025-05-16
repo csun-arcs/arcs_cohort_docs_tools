@@ -32,6 +32,18 @@ This is the `{{ repo_name }}` ROS 2 package, part of the [CoHORT](https://github
 
 For full documentation and launch file reference, visit the [Wiki](https://github.com/{{ github_user }}/{{ repo_name }}/wiki)
 
+{% if dependencies %}
+## 📦 Dependencies
+
+`{{ repo_name }}` pulls in the following dependencies:
+
+| Repository | URL | Version |
+|------------|-----|---------|
+{% for dep in dependencies -%}
+| `{{ dep.name }}` | [{{ dep.url }}]({{ dep.url }}) | `{{ dep.version }}` |
+{% endfor %}
+{% endif %}
+
 {% if launch_docs %}
 ## 🚀 Launch Files
 
@@ -40,8 +52,6 @@ The following launch files are provided by this package:
 {% for file in launch_docs %}
 - `{{ file.title }}`: [{{ file.name[:-3] }}](https://github.com/{{ github_user }}/{{ repo_name }}/wiki/{{ file.name[:-3] }})
 {% endfor %}
-{% else %}
-_This package does not contain any launch files._
 {% endif %}
 
 {% if maintainers %}
@@ -49,6 +59,7 @@ _This package does not contain any launch files._
 
 {% for maint in maintainers %}
 - {{ maint.name }}{% if maint.obfuscated_email %} ({{ maint.obfuscated_email }}){% endif %}
+
 {% endfor %}
 {% endif %}
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import yaml
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
@@ -45,6 +46,27 @@ def extract_package_metadata(package_dir: Path):
         except Exception as e:
             print(f"[WARN] Failed to parse package.xml: {e}")
     return description, license, maintainers
+
+def extract_dependencies(package_dir: Path, dep_files: list[str] = ["dependencies.repos", "dependencies.rosinstall"]) -> list[dict]:
+    for dep_file in dep_files:
+        path = package_dir / dep_file
+        if path.exists():
+            try:
+                with path.open("r") as f:
+                    data = yaml.safe_load(f)
+                repos = data.get("repositories", {})
+                return [
+                    {
+                        "name": name,
+                        "url": info.get("url", ""),
+                        "version": info.get("version", "")
+                    }
+                    for name, info in repos.items()
+                    if isinstance(info, dict)
+                ]
+            except Exception as e:
+                print(f"[WARN] Failed to parse {dep_file}: {e}")
+    return []
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -105,6 +127,15 @@ def parse_args():
         help="Name of the Github Actions workflow filename used for running tests.",
     )
     parser.add_argument(
+        "-pdf",
+        "--package-dependency-files",
+        nargs="*",
+        default=["dependencies.repos", "dependencies.rosinstall"],
+        help=(
+            "Dependency file names to search for within packages."
+        ),
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="If set, renders the output to stdout instead of writing to a file.",
@@ -143,6 +174,7 @@ def main():
     package_dir = Path(args.workspace) / "src" / args.package_name
     description, license, maintainers = extract_package_metadata(package_dir)
     available_branches = get_remote_branches(package_dir)
+    dependencies = extract_dependencies(package_dir, dep_files=args.package_dependency_files)
 
     context = {
         "repo_name": args.package_name,
@@ -152,6 +184,7 @@ def main():
         "description": description,
         "license": license,
         "maintainers": maintainers,
+        "dependencies": dependencies,
         "docs_workflow_filename": args.docs_workflow_filename,
         "tests_workflow_filename": args.tests_workflow_filename,
     }

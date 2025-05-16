@@ -74,7 +74,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p wiki/launch_args
-          cp ./ros_ws/launch_docs/${{ github.event.repository.name }}/*.md wiki/launch_args/
+          LAUNCH_DOC_DIR="./ros_ws/launch_docs/${{ github.event.repository.name }}"
+          if compgen -G "$LAUNCH_DOC_DIR/*.md" > /dev/null; then
+            cp "$LAUNCH_DOC_DIR"/*.md wiki/launch_args/
+          else
+            echo "No launch docs to copy for ${{ github.event.repository.name }}"
+          fi
 
       - name: Generate Home.md from template
         run: |

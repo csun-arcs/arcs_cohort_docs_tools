@@ -43,7 +43,7 @@ def extract_subcommands(help_output):
     return [cmd.strip() for cmd in match.group(1).split(",")]
 
 def write_markdown(path, title, content, dry_run=False):
-    md = f"# {title}\n\n```{content}```"
+    md = f"# {title}\n\n```\n{content}\n```"
     if dry_run:
         print(f"[DRY RUN] Would write: {path}")
         print(md)

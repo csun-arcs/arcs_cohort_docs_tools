@@ -93,19 +93,22 @@ def parse_args():
     parser.add_argument(
         "--launch-docs-dir",
         type=Path,
+        help="Base directory containing per-package .md launch doc files.",
+    )
+    parser.add_argument(
+        "--cli-command-docs-dir",
+        type=Path,
         required=True,
-        help="Base directory containing per-package .md launch files.",
+        help="Base directory containing per-cli-command .md doc files.",
     )
     parser.add_argument(
         "--workspace",
         type=str,
-        required=True,
         help="Name of the ROS workspace to use.",
     )
     parser.add_argument(
         "--package-name",
         type=str,
-        required=True,
         help="Name of the package to filter launch docs for.",
     )
     parser.add_argument(
@@ -151,36 +154,68 @@ def main():
         lstrip_blocks=True)
     template = env.get_template(args.template_name)
 
-    package_doc_dir = args.launch_docs_dir / args.package_name
-    if not package_doc_dir.exists():
-        print(f"[WARN] Launch doc directory not found: {package_doc_dir}")
+    if args.launch_docs_dir and args.package_name:
+        package_doc_dir = args.launch_docs_dir / args.package_name
+        if not package_doc_dir.exists():
+            print(f"[WARN] Launch doc directory not found: {package_doc_dir}")
+            launch_docs = []
+        else:
+            launch_docs = [
+                {
+                    "name": md.name,
+                    "title": md.name.removesuffix(".launch.md").replace("_", " ").title(),
+                }
+                for md in sorted(package_doc_dir.glob("*.md"))
+            ]
+
+        if not launch_docs:
+            print(f"[WARN] No launch docs found for package: {args.package_name}")
+        else:
+            print(
+                f"[INFO] Found {len(launch_docs)} launch docs for package: {args.package_name}"
+            )
+    else:
         launch_docs = []
-    else:
-        launch_docs = [
-            {
-                "name": md.name,
-                "title": md.name.removesuffix(".launch.md").replace("_", " ").title(),
-            }
-            for md in sorted(package_doc_dir.glob("*.md"))
-        ]
 
-    if not launch_docs:
-        print(f"[WARN] No launch docs found for package: {args.package_name}")
-    else:
-        print(
-            f"[INFO] Found {len(launch_docs)} launch docs for package: {args.package_name}"
-        )
+    if args.cli_command_docs_dir:
+        if not args.cli_command_docs_dir.exists():
+            print(f"[WARN] CLI command docs directory not found: {args.cli_command_docs_dir}")
+            cli_command_docs = []
+        else:
+            cli_command_docs = [
+                {
+                    "name": md.name,
+                    "title": md.name.removesuffix(".md").replace("_", " ").title(),
+                }
+                for md in sorted(args.cli_command_docs_dir.glob("*.md"))
+            ]
 
-    package_dir = Path(args.workspace) / "src" / args.package_name
-    description, license, maintainers = extract_package_metadata(package_dir)
-    available_branches = get_remote_branches(package_dir)
-    dependencies = extract_dependencies(package_dir, dep_files=args.package_dependency_files)
+        if not cli_command_docs:
+            print(f"[WARN] No CLI command docs found.")
+        else:
+            print(
+                f"[INFO] Found {len(cli_command_docs)} CLI command docs."
+            )
+    else:
+        cli_command_docs = []
+
+    if args.workspace and args.package_name:
+        package_dir = Path(args.workspace) / "src" / args.package_name
+        description, license, maintainers = extract_package_metadata(package_dir)
+        available_branches = get_remote_branches(package_dir)
+        dependencies = extract_dependencies(package_dir, dep_files=args.package_dependency_files)
+    else:
+        package_dir = None
+        description, license, maintainers = None, None, None
+        available_branches = None
+        dependencies = None
 
     context = {
         "repo_name": args.package_name,
         "github_user": args.github_user,
         "branches": available_branches,
         "launch_docs": launch_docs,
+        "cli_command_docs": cli_command_docs,
         "description": description,
         "license": license,
         "maintainers": maintainers,

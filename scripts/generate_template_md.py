@@ -98,7 +98,6 @@ def parse_args():
     parser.add_argument(
         "--cli-command-docs-dir",
         type=Path,
-        required=True,
         help="Base directory containing per-cli-command .md doc files.",
     )
     parser.add_argument(
